@@ -107,7 +107,7 @@ const Game = {
     const movesWithValues = parentMoves.map(move => {
       const nextBoard = this.copy2DArray(board);
       nextBoard[move[0]][move[1]] = 'O';
-      return { move, value: this.minimax(nextBoard, !isMax, 1) };
+      return { move, value: this.minimax(nextBoard, !isMax, 1, this.constants.MIN_VALUE, this.constants.MAX_VALUE) };
     });
     movesWithValues.sort((a, b) => isMax ? b.value - a.value : a.value - b.value);
     const bestValue = movesWithValues[0].value;
@@ -115,7 +115,7 @@ const Game = {
     return possibleMoves[this.random(0, possibleMoves.length - 1)].move;
   },
 
-  minimax(board, isMax, depth = 0) {
+  minimax(board, isMax, depth = 0, alpha, beta) {
     if (this.checkGameState(board, true) === 'WIN') return this.constants.MAX_VALUE - depth;
     if (this.checkGameState(board, true) === 'LOSE') return this.constants.MIN_VALUE + depth;
     if (this.checkGameState(board, true) === 'DRAW') return this.constants.DRAW_VALUE;
@@ -127,6 +127,8 @@ const Game = {
         nextBoard[move[0]][move[1]] = depth % 2 === 0 ? 'O' : 'X';
         const value = this.minimax(nextBoard, false, depth + 1);
         bestValue = value > bestValue ? value : bestValue;
+        alpha = bestValue > alpha ? bestValue : alpha;
+        if (beta <= alpha) break;
       }
       return bestValue;
     } else {
@@ -137,6 +139,8 @@ const Game = {
         nextBoard[move[0]][move[1]] = depth % 2 === 0 ? 'O' : 'X';
         const value = this.minimax(nextBoard, true, depth + 1);
         bestValue = value < bestValue ? value : bestValue;
+        beta = bestValue < beta ? bestValue : beta;
+        if (beta <= alpha) break;
       }
       return bestValue;
     }
