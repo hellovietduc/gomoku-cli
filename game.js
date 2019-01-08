@@ -1,15 +1,15 @@
-const Game = {
-  constants: {
-    MAX_VALUE: 100,
-    MIN_VALUE: -100,
-    DRAW_VALUE: 0,
-  },
+const constants = require('./constants');
+const configs = require('./configs');
+const { printBoard, copy2DArray, random } = require('./utils');
 
+const Game = {
   start() {
     this.board = this.createGame();
-    const stdin = process.openStdin();
+    // this.humanMoves = [];
+    // this.botMoves = [];
 
-    stdin.addListener('data', input => {
+    const stdin = process.openStdin();
+    stdin.addListener('data', (input) => {
       const move = input.toString().trim().split(' ');
       const saved = this.saveMove('HUMAN', move, this.board);
       if (saved) this.callBot(this.board);
@@ -17,28 +17,34 @@ const Game = {
   },
 
   createGame() {
-    const board = [
-      ['.', '.', '.'],
-      ['.', '.', '.'],
-      ['.', '.', '.']
-    ];
+    const { EMPTY_SIGN } = constants;
+    const { BOARD_COLS, BOARD_ROWS } = configs;
+    const board = [];
+    const row = [];
+    for (let i = 0; i < BOARD_COLS; i++) {
+      row.push(EMPTY_SIGN);
+    }
+    for (let i = 0; i < BOARD_ROWS; i++) {
+      board.push([...row]);
+    }
     console.log('Game started!');
-    this.printBoard(board);
+    printBoard(board);
     console.log('Your move:');
     return board;
   },
 
+  // TODO: refactor to dynamically check
   checkGameState(board, silent) {
     for (let i = 0; i < 3; i++) {
       const horizontal = board[i][0] + board[i][1] + board[i][2];
       const vertical = board[0][i] + board[1][i] + board[2][i];
-      const down = board[0][0] + board[1][1] + board[2][2];
-      const up = board[2][0] + board[1][1] + board[0][2];
-      if (horizontal === 'XXX' || vertical === 'XXX' || down === 'XXX' || up === 'XXX') {
+      const diagonalDown = board[0][0] + board[1][1] + board[2][2];
+      const diagonalUp = board[2][0] + board[1][1] + board[0][2];
+      if (horizontal === 'XXX' || vertical === 'XXX' || diagonalDown === 'XXX' || diagonalUp === 'XXX') {
         if (!silent) console.log('You win!');
         return 'WIN';
       }
-      if (horizontal === 'OOO' || vertical === 'OOO' || down === 'OOO' || up === 'OOO') {
+      if (horizontal === 'OOO' || vertical === 'OOO' || diagonalDown === 'OOO' || diagonalUp === 'OOO') {
         if (!silent) console.log('You lose!');
         return 'LOSE';
       }
@@ -65,20 +71,38 @@ const Game = {
       return false;
     }
 
-    if (row < 0 || col < 0 || row > 2 || col > 2) {
-      console.log('Arguments must be in [0, 2]!');
+    const { EMPTY_SIGN } = constants;
+    const { BOARD_COLS, BOARD_ROWS, HUMAN_SIGN, BOT_SIGN } = configs;
+
+    if (row < 0 || row >= BOARD_ROWS) {
+      console.log(`Row index must be in [0, ${BOARD_ROWS}]!`);
       console.log('Next move:');
       return false;
     }
 
-    if (board[row][col] !== '.') {
+    if (col < 0 || col >= BOARD_COLS) {
+      console.log(`Column index must be in [0, ${BOARD_COLS}]!`);
+      console.log('Next move:');
+      return false;
+    }
+
+    if (board[row][col] !== EMPTY_SIGN) {
       console.log('Position was not empty!');
       console.log('Next move:');
       return false;
     }
 
-    board[row][col] = player === 'HUMAN' ? 'X' : 'O';
-    this.printBoard(board);
+    if (player === 'HUMAN') {
+      board[row][col] = HUMAN_SIGN;
+      // this.humanMoves.push([row, col]);
+    }
+
+    if (player === 'BOT') {
+      board[row][col] = BOT_SIGN;
+      // this.botMoves.push([row, col]);
+    }
+
+    printBoard(board);
 
     const finished = this.checkGameState(board);
     if (finished) process.exit(0);
@@ -93,38 +117,44 @@ const Game = {
   },
 
   findPossibleMoves(board) {
+    const { EMPTY_SIGN } = constants;
+    const { BOARD_COLS, BOARD_ROWS } = configs;
     const moves = [];
-    for (let i = 0; i < 3; i++) {
-      for (let j = 0; j < 3; j++) {
-        if (board[i][j] === '.') moves.push([i, j]);
+    for (let i = 0; i < BOARD_ROWS; i++) {
+      for (let j = 0; j < BOARD_COLS; j++) {
+        if (board[i][j] === EMPTY_SIGN) moves.push([i, j]);
       }
     }
     return moves;
   },
 
   findBestMove(board, isMax) {
+    const { MAX_VALUE, MIN_VALUE } = constants;
+    const { BOT_SIGN } = configs;
     const parentMoves = this.findPossibleMoves(board);
-    const movesWithValues = parentMoves.map(move => {
-      const nextBoard = this.copy2DArray(board);
-      nextBoard[move[0]][move[1]] = 'O';
-      return { move, value: this.minimax(nextBoard, !isMax, 1, this.constants.MIN_VALUE, this.constants.MAX_VALUE) };
+    const movesWithValues = parentMoves.map((move) => {
+      const nextBoard = copy2DArray(board);
+      nextBoard[move[0]][move[1]] = BOT_SIGN;
+      return { move, value: this.minimax(nextBoard, !isMax, 1, MIN_VALUE, MAX_VALUE) };
     });
     movesWithValues.sort((a, b) => isMax ? b.value - a.value : a.value - b.value);
     const bestValue = movesWithValues[0].value;
     const possibleMoves = movesWithValues.filter(m => m.value === bestValue);
-    return possibleMoves[this.random(0, possibleMoves.length - 1)].move;
+    return possibleMoves[random(0, possibleMoves.length - 1)].move;
   },
 
   minimax(board, isMax, depth = 0, alpha, beta) {
-    if (this.checkGameState(board, true) === 'WIN') return this.constants.MAX_VALUE - depth;
-    if (this.checkGameState(board, true) === 'LOSE') return this.constants.MIN_VALUE + depth;
-    if (this.checkGameState(board, true) === 'DRAW') return this.constants.DRAW_VALUE;
+    const { MAX_VALUE, MIN_VALUE, DRAW_VALUE } = constants;
+    const { BOT_SIGN, HUMAN_SIGN } = configs;
+    if (this.checkGameState(board, true) === 'WIN') return MAX_VALUE - depth;
+    if (this.checkGameState(board, true) === 'LOSE') return MIN_VALUE + depth;
+    if (this.checkGameState(board, true) === 'DRAW') return DRAW_VALUE;
     if (isMax) {
-      let bestValue = this.constants.MIN_VALUE;
+      let bestValue = MIN_VALUE;
       const moves = this.findPossibleMoves(board);
       for (const move of moves) {
-        const nextBoard = this.copy2DArray(board);
-        nextBoard[move[0]][move[1]] = depth % 2 === 0 ? 'O' : 'X';
+        const nextBoard = copy2DArray(board);
+        nextBoard[move[0]][move[1]] = depth % 2 === 0 ? BOT_SIGN : HUMAN_SIGN;
         const value = this.minimax(nextBoard, false, depth + 1);
         bestValue = value > bestValue ? value : bestValue;
         alpha = bestValue > alpha ? bestValue : alpha;
@@ -132,11 +162,11 @@ const Game = {
       }
       return bestValue;
     } else {
-      let bestValue = this.constants.MAX_VALUE;
+      let bestValue = MAX_VALUE;
       const moves = this.findPossibleMoves(board);
       for (const move of moves) {
-        const nextBoard = this.copy2DArray(board);
-        nextBoard[move[0]][move[1]] = depth % 2 === 0 ? 'O' : 'X';
+        const nextBoard = copy2DArray(board);
+        nextBoard[move[0]][move[1]] = depth % 2 === 0 ? BOT_SIGN : HUMAN_SIGN;
         const value = this.minimax(nextBoard, true, depth + 1);
         bestValue = value < bestValue ? value : bestValue;
         beta = bestValue < beta ? bestValue : beta;
@@ -144,20 +174,6 @@ const Game = {
       }
       return bestValue;
     }
-  },
-
-  printBoard(board) {
-    board.forEach(row => console.log(row.reduce((p, c) => `${p} ${c}`, '')));
-  },
-
-  copy2DArray(srcArray) {
-    const newArray = [];
-    srcArray.forEach(e => newArray.push([...e]));
-    return newArray;
-  },
-
-  random(min, max) {
-    return Math.floor(Math.random() * (max - min + 1) + min);
   }
 };
 
