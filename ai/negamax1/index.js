@@ -1,5 +1,5 @@
-const constants = require('../configs/constants');
-const { isAnyComboInDirection, getDirectionCells, getChildNodes } = require('../utils/negamax');
+const constants = require('../../configs/constants');
+const { isAnyComboInDirection, getDirectionCells, getChildNodes } = require('./utils');
 
 const combos = {
   win: [
@@ -176,17 +176,20 @@ const heuristic = (node, parent) => {
   return 0;
 };
 
+// Note: This algorithm depends entirely on heuristic() function to determine the best move.
+// Passing a depth higher than 0 leads to slower calculation and worse intelligence.
+// TODO: find out why
 const negamax = (node, depth, alpha, beta, type, parent) => {
-  const { MIN_VALUE } = constants;
+  // const { MIN_VALUE } = constants;
   if (depth === 0) return heuristic(node, parent);
-  let score = MIN_VALUE;
-  const childNodes = getChildNodes(node, type);
-  for (let i = 0; i < childNodes.length; i++) {
-    score = Math.max(score, -negamax(childNodes[i], depth - 1, -beta, -alpha, -type, node));
-    alpha = Math.max(score, alpha);
-    if (alpha >= beta) break;
-  }
-  return score;
+  // let score = MIN_VALUE;
+  // const childNodes = getChildNodes(node, type);
+  // for (let i = 0; i < childNodes.length; i++) {
+  //   score = Math.max(score, -negamax(childNodes[i], depth - 1, -beta, -alpha, -type, node));
+  //   alpha = Math.max(score, alpha);
+  //   if (alpha >= beta) break;
+  // }
+  // return score;
 };
 
 module.exports = (board, type) => {

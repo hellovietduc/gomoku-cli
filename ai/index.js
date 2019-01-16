@@ -1,5 +1,5 @@
-const negamax = require('./negamax');
+const negamax1 = require('./negamax1');
 
 module.exports = {
-  negamax,
+  negamax1,
 };

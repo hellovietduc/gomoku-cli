@@ -1,5 +1,5 @@
-const constants = require('../configs/constants');
-const { copy2DArray, findSubArray, findArray } = require('../utils/common');
+const constants = require('../../configs/constants');
+const { copy2DArray, findSubArray, findArray } = require('../../utils/common');
 
 const isAnyComboInDirection = (combos, direction) => {
   for (let i = 0; i < combos.length; i++) {

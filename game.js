@@ -151,7 +151,7 @@ const Game = {
   },
 
   playBotMove() {
-    const move = AI.negamax(this.board, this.bot.value);
+    const move = AI.negamax1(this.board, this.bot.value);
     console.log(this.bot.sign + ' move:');
     console.log(`${move[0]},${move[1]}`);
     this.saveMove(move, this.bot);
