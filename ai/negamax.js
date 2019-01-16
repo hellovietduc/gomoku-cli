@@ -176,29 +176,32 @@ const heuristic = (node, parent) => {
   return 0;
 };
 
-const negamax = (node, depth, type, parent) => {
+const negamax = (node, depth, alpha, beta, type, parent) => {
+  const { MIN_VALUE } = constants;
   if (depth === 0) return heuristic(node, parent);
-  let score = Number.MIN_VALUE;
+  let score = MIN_VALUE;
   const childNodes = getChildNodes(node, type);
   for (let i = 0; i < childNodes.length; i++) {
-    score = Math.max(score, -negamax(childNodes[i], depth - 1, -type, node));
+    score = Math.max(score, -negamax(childNodes[i], depth - 1, -beta, -alpha, -type, node));
+    alpha = Math.max(score, alpha);
+    if (alpha >= beta) break;
   }
   return score;
 };
 
 module.exports = (board, type) => {
-  const { BOARD_SIZE } = constants;
+  const { BOARD_SIZE, MAX_VALUE, MIN_VALUE } = constants;
 
   // get child nodes of the current board
   const nodes = getChildNodes(board, type);
 
   // set initial values for the best node
   let bestNode = -1;
-  let bestScore = constants.MIN_VALUE;
+  let bestScore = MIN_VALUE;
 
   // find the best node from all child nodes
   for (let i = 0; i < nodes.length; i++) {
-    let score = negamax(nodes[i], 0, -type, board);
+    let score = negamax(nodes[i], 0, MIN_VALUE, MAX_VALUE, -type, board);
     if (score > bestScore) {
       bestNode = i;
       bestScore = score;
