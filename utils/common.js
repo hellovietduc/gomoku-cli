@@ -4,6 +4,17 @@ const copy2DArray = (array) => {
   return newArray;
 };
 
+const shuffleArray = (array) => {
+  let len = array.length;
+  while (len > 0) {
+    const rnd = Math.floor(Math.random() * len--);
+    const tmp = array[len];
+    array[len] = array[rnd];
+    array[rnd] = tmp;
+  }
+  return array;
+};
+
 const findSubArray = (subArray, array) => {
   let elements;
   for (let i = 0; i <= array.length - subArray.length; i++) {
@@ -33,6 +44,7 @@ const findArray = (array, arrayOfArrays) => {
 
 module.exports = {
   copy2DArray,
+  shuffleArray,
   findSubArray,
   findArray,
 };

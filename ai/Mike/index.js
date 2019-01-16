@@ -1,5 +1,6 @@
 const constants = require('../../configs/constants');
-const { isAnyComboInDirection, getDirectionCells, getChildNodes } = require('./utils');
+const { getChildNodes } = require('../../utils/board');
+const { isAnyComboInDirection, getDirectionCells } = require('./utils');
 
 const combos = {
   win: [

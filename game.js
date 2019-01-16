@@ -4,11 +4,12 @@ const Board = require('./utils/board');
 const AI = require('./ai');
 
 const Game = {
-  start() {
+  async start() {
     // initialize the game
     this.board = Board.initBoard();
-    this.human = new Player('X');
-    this.bot = new Player('O');
+    this.ai = await AI.init();
+    this.human = new Player(await Player.chooseSign());
+    this.bot = new Player(this.human.sign === 'X' ? 'O' : 'X');
 
     // print the board
     Board.printBoard(this.board);
@@ -151,7 +152,7 @@ const Game = {
   },
 
   playBotMove() {
-    const move = AI.negamax1(this.board, this.bot.value);
+    const move = AI[this.ai](this.board, this.bot.value);
     console.log(this.bot.sign + ' move:');
     console.log(`${move[0]},${move[1]}`);
     this.saveMove(move, this.bot);
