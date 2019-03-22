@@ -1,0 +1,8 @@
+{
+  "name": "gomoku-cli",
+  "version": "1.1.0",
+  "description": "Play Gomoku in command line",
+  "scripts": {
+    "play": "node src/game.js"
+  }
+}
