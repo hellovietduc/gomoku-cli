@@ -13,7 +13,7 @@ npm run play
 1. Install the package
 
    ```
-   npm install git+https://git@github.com/vietduc01100001/gomoku-cli.git
+   npm install vietduc01100001/gomoku-cli
    ```
 
 2. Use it in your code
